@@ -1,0 +1,57 @@
+name: حساب من
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: ساخت APK اندروید
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: دریافت پروژه
+        uses: actions/checkout@v4
+
+      - name: نصب Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: نصب Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: بررسی پروژه
+        run: |
+          if [ ! -f pubspec.yaml ]; then
+            echo "ERROR: pubspec.yaml not found in repository root"
+            exit 1
+          fi
+
+      - name: آماده‌سازی اندروید
+        run: |
+          if [ ! -f android/gradlew ]; then
+            flutter create --platforms=android .
+          fi
+
+      - name: نصب وابستگی‌ها
+        run: flutter pub get
+
+      - name: بررسی کد
+        run: flutter analyze
+
+      - name: ساخت APK
+        run: flutter build apk --release
+
+      - name: ذخیره APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hisab-Man-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
